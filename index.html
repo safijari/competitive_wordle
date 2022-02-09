@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebSocket demo</title>
+    </head>
+    <body>
+	<input type="text" id="username">
+	<button type="button" id="usernamebutton" onclick="sendUsername()">Click Me!</button>
+
+        <script>
+	  function _get(id) {
+	      return document.getElementById(id);
+	  }
+            var ws = new WebSocket("ws://127.0.0.1:5678/"),
+                messages = document.createElement('ul');
+
+            ws.onmessage = function (event) {
+		console.log(event.data);
+            };
+
+	  function sendUsername() {
+	      console.log("sending username");
+	      var username = _get("username").value;
+	      if (username != "") {
+		ws.send(username);
+	      }
+	  }
+
+        </script>
+
+    </body>
+</html>
