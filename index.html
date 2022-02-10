@@ -1,32 +1,92 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>WebSocket demo</title>
-    </head>
-    <body>
-	<input type="text" id="username">
-	<button type="button" id="usernamebutton" onclick="sendUsername()">Click Me!</button>
+  <head>
+    <title>WebSocket demo</title>
+  </head>
+  <body>
+    <span id="usernamespan">Username: <input type="text" id="username"> </span>
+    <button type="button" id="usernamebutton" onclick="sendUsername()">Click Me!</button>
+    <p id="yourusername"></p>
 
-        <script>
-	  function _get(id) {
-	      return document.getElementById(id);
+    <span id="gamespan">Guess: <input type="text" id="gameinput"> </span>
+    <button type="button" id="guessbutton" onclick="sendGuess()">Submit</button>
+    <p/>
+
+    <span id="state"></span>
+
+    <script>
+      var initialized = false;
+      var username = "";
+      function _get(id) {
+	  return document.getElementById(id);
+      }
+
+      var ws = new WebSocket('ws://' + document.domain + ':' + location.port + '/game')
+
+      function to_emoji(line) {
+	  var out = "";
+	  for (var i = 0; i < line.length; i++) {
+	      var ch = line[i];
+	      if (ch == "C") {out += "🟩"}
+	      if (ch == "P") {out += "🟨"}
+	      if (ch == "X") {out += "⬛"}
 	  }
-            var ws = new WebSocket("ws://127.0.0.1:5678/"),
-                messages = document.createElement('ul');
+	  return out;
+      }
 
-            ws.onmessage = function (event) {
-		console.log(event.data);
-            };
+      ws.onmessage = function (event) {
+	  console.log(event.data);
+	  if (!initialized)
+	  {
+	      _get("username").remove();
+	      _get("usernamebutton").remove();
+	      _get("usernamespan").remove();
+	      initialized = true;
+	  }
+	  var res = JSON.parse(event.data);
+	  if (res.type == "state") {
+	      _get("yourusername").innerHTML = "You're logged in as: " + res.data.username;
+	  }
+	  username = res.data.username;
+	  var out = "\n";
+	  for (var i = 0; i < res.data.current_game_state.length; i++) {
+	      var guess = res.data.current_game_state[i][0];
+	      var glyphs = res.data.current_game_state[i][1];
+	      out += "<p>" + guess + "</p>";
+	      out += "<p>" + to_emoji(glyphs) + "</p>";
+	  }
 
-	  function sendUsername() {
-	      console.log("sending username");
-	      var username = _get("username").value;
-	      if (username != "") {
-		ws.send(username);
+	  for (const summary of res.summaries) {
+	      if (summary.username != res.data.username) {
+		  console.log(summary);
+	      out += "<p> User: " + summary.username + "</p>";
+	      for (const tries of summary.current_game_state) {
+		var glyphs = tries[1];
+		out += "<p>" + to_emoji(glyphs) + "</p>";
+	      }
 	      }
 	  }
 
-        </script>
+	  _get("state").innerHTML = out;
 
-    </body>
+      };
+
+      function sendUsername() {
+	  var username = _get("username").value;
+	  if (username != "") {
+	      console.log("sending username");
+	      ws.send("handshake:" + username);
+	  }
+      }
+
+      function sendGuess() {
+	  var guess = _get("gameinput").value;
+	  // validate
+	  console.log("sending guess " + guess);
+	  ws.send("guess:"+username+":" + guess);
+      }
+
+    </script>
+
+  </body>
 </html>
