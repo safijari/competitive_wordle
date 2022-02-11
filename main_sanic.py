@@ -16,15 +16,15 @@ to_choose = [w for w in to_choose if len(set(w)) == 5]
 
 
 to_choose = set(to_choose)
-chosen = set()
+chosen = list()
 
 game = CompetitiveWordle()
 
 connected = set()
 
 def start_new_game():
-    word = choice(list(to_choose.difference(chosen)))
-    chosen.add(word)
+    word = choice(list(to_choose.difference(set(chosen))))
+    chosen.append(word)
     game.select_word(word)
 
 start_new_game()
@@ -85,6 +85,7 @@ async def sync_game(in_socket):
                         "type": "state",
                         "data": game.players[user].as_dict(),
                         "summaries": summaries,
+                        "previous_words": chosen[:-1]
                     }
                 )
             )

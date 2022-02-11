@@ -38,7 +38,6 @@ class GameState:
             return "C" * len(word)
 
         self.tries.append(word)
-        print(self.tries)
 
         out = score_guess(word, self.word)
 
