@@ -21,47 +21,63 @@
       /* 	  padding: 1px 2px 0; */
       /* 	  border: 1px solid black; */
       /* } */
-td {
-    padding: 0px 10px;
-}
-p {
-    margin-bottom: 5px;
-}
+      td {
+	  padding: 0px 10px;
+      }
+      p {
+	  margin-bottom: 5px;
+      }
+      td {
+	  vertical-align: baseline;
+      }
+
     </style>
   </head>
   <body>
-    <h2 style="margin:0;"> Wordle Kombat </h2>
     <table> <tr>
-    <td>
-    <span id="usernamespan">Username: <input type="text" id="username"> </span>
-    <button type="button" id="usernamebutton" onclick="sendUsername()">Submit</button>
-    <p id="yourusername"></p>
+	<td>
+	  <h2 style="margin:0;"> Wordle Kombat </h2>
+	  <span id="usernamespan">Username: <input type="text" id="username"> </span>
+	  <button type="button" id="usernamebutton" onclick="sendUsername()">Submit</button>
+	  <p id="yourusername"></p>
 
-    <span>Feedback: </span><span id="feedback"></span>
+	  <span>Feedback: </span><span id="feedback"></span>
 
-    <p/>
+	  <p/>
 
-    <span id="gamespan">Guess: <input type="text" id="gameinput" onkeyup="
-									  var start = this.selectionStart;
-									  var end = this.selectionEnd;
-									  this.value = this.value.toUpperCase();
-									  this.setSelectionRange(start, end);
-									  currguess=this.value;updateCurrGuess();"> </span>
-    <button type="button" id="guessbutton" onclick="sendGuess()">Submit</button>
-    <p/>
+	  <span id="gamespan">Guess: <input type="text" id="gameinput" onkeyup="
+										var start = this.selectionStart;
+										var end = this.selectionEnd;
+										final_val = '';
+										for (const item of this.value.toLowerCase()) {
+										if (alphabet.includes(item)) {final_val += item.toUpperCase();}
+										}
+										this.value = final_val.substring(0, 5);
+										this.setSelectionRange(start, end);
+										if (state.current_game_state.length >= 6) {
+										    this.value = '';
+											       }
+										currguess=this.value;updateCurrGuess();"> </span>
+	  <button type="button" id="guessbutton" onclick="sendGuess()">Submit</button>
+	  <p/>
 
-    <span id="state"></span>
-    <span id="currguess"></span>
+	  <span id="state"></span>
+	  <br/>
+	  <span style="margin-top:20px;" id="currguess"></span>
 
-    <br/><span id="keyboard"></span>
+	  <br/><span id="keyboard"></span>
 
-    </td>
-    <td> </td>
-    <td>
-    <h3> Other Players </h3>
-    <span id="statesummary"></span>
-    </td>
-    </tr>
+	</td>
+	<td> </td>
+	<td>
+	  <b style="margin-top:0;"> Other Players </b>
+	  <span id="statesummary"></span>
+	</td>
+	<td>
+	  <b style="margin-top:0;"> Words so far </b>
+	  <span id="wordssofar"></span>
+	</td>
+      </tr>
     </table>
 
     <script>
@@ -118,12 +134,27 @@ p {
       }
 
       function styleletter(letter, glyph) {
-	 var color = "#D3D3D3";
-	 if (glyph == "C") {color = "#5CC218";}
-	 if (glyph == "P") {color = "#FFBF00";}
-	 if (glyph == "W") {color = "white";}
-	 var final = "<b><span style='border:1px solid black;padding: 5px 10px 5px 10px;border-radius:3px;weight:bold;color:black;background-color:" + color + "'>" + letter.toUpperCase() + "</span></b> ";
+	  var color = "#D3D3D3";
+	  if (glyph == "C") {color = "#5CC218";}
+	  if (glyph == "P") {color = "#FFBF00";}
+	  if (glyph == "W") {color = "white";}
+	  var final = "<b><span style='border:1px solid black;padding: 5px 10px 5px 10px;border-radius:3px;weight:bold;color:black;background-color:" + color + "'>" + letter.toUpperCase() + "</span></b> ";
 	  return final;
+      }
+
+      function get_not_present(state) {
+	for (var i = 0; i < state.current_game_state.length; i++) {
+	    var guess = state.current_game_state[i][0];
+	    var glyphs = state.current_game_state[i][1];
+	    var notpresent = [];
+	    for (var j = 0; j < guess.length; j++) {
+		final += styleletter(guess[j], glyphs[j]);
+		if (glyphs[j] == "X") {
+		    notpresent.push(guess[j]);
+		}
+	    }
+	}
+	    return notpresent;
       }
 
       ws.onmessage = function (event) {
@@ -170,10 +201,10 @@ p {
 	      for (const summary of res.summaries) {
 		  if (summary.username != res.data.username) {
 		      // console.log(summary);
-		      out += "<p> User: " + summary.username + ", Score: " + summary.score + ", Games: " + summary.num_games + "</p>";
+		      out += "<p> User: <b>" + summary.username + "</b>, Score: " + summary.score + ", Games: " + summary.num_games + "</p>";
 		      for (const tries of summary.current_game_state) {
 			  var glyphs = tries[1];
-			  out += "<span style='margin:0;padding:0;'>" + to_emoji(glyphs) + "</span><br/>";
+			  out += "<span>   </span><p style='padding:0px;margin-bottom:-7px;margin-top:-7px;margin-left:10px;'>" + to_emoji(glyphs) + "</p>";
 		      }
 		  }
 	      }
@@ -205,6 +236,18 @@ p {
 
 	      _get("keyboard").innerHTML = "<p style='font-family:monospace;'>" + kbd_string + "</p>";
 
+	      // _get("wordssofar").innerHTML = ""
+	      // console.log(res.data);
+
+	      var wsf = "<ol>";
+	      for (const previous_word of res.previous_words) {
+		  wsf += "<li>" + previous_word.toUpperCase() + "</li>";
+	      }
+	      wsf += "</ol>";
+
+	      _get("wordssofar").innerHTML = wsf;
+
+
 	  }
 	  if (res.type == "dictionary") {
 	      dictionary = res.data;
@@ -214,8 +257,12 @@ p {
 
       function updateCurrGuess() {
 	  var final = "";
+	  var notpresent = get_not_present(state);
 	  for (const letter of currguess) {
-	      final += "<b><span style='border:1px solid black;padding: 5px 10px 5px 10px;border-radius:3px;weight:bold;color:black;background-color:white'>" + letter.toUpperCase() + "</span></b> ";
+	      var color = "white";
+	      if (notpresent.includes(letter.toLowerCase())) {final += styleletter(letter, "X")}
+	      else {final += styleletter(letter, "W")};
+	      // final += "<b><span style='border:1px solid black;padding: 5px 10px 5px 10px;border-radius:3px;weight:bold;color:black;background-color:" + color + "'>" + letter.toUpperCase() + "</span></b> ";
 	  }
 	  final = "<p style='font-family:monospace;'>" + final + "</p>";
 	  var current_guess = [];
