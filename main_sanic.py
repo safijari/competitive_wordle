@@ -5,11 +5,29 @@ from game import CompetitiveWordle
 import asyncio
 import json
 import traceback
+from random import choice
+
+from dictionary import to_choose, allowed_words
+
+all_words = to_choose + allowed_words
+
+to_choose = [w for w in to_choose if len(set(w)) == 5]
+print(len(to_choose), "total words")
+
+
+to_choose = set(to_choose)
+chosen = set()
 
 game = CompetitiveWordle()
-game.select_word("perky")
 
 connected = set()
+
+def start_new_game():
+    word = choice(list(to_choose.difference(chosen)))
+    chosen.add(word)
+    game.select_word(word)
+
+start_new_game()
 
 users = {}
 
@@ -31,6 +49,7 @@ async def consumer(socket):
         username = message.split(":")[1]
         game.add_player(username)
         users[username] = socket
+        await socket.send(json.dumps({"type": "dictionary", "data": all_words}))
         return True
 
     if message and "guess" in message and len(message.split(":")) == 3:
@@ -57,7 +76,10 @@ async def sync_game():
             )
         except Exception:
             print(f"Can't sync to {user}, will try next time")
-            # traceback.print_exc()
+
+    if all([game.players[user].games[-1].check_if_over() for user in users]):
+        print("starting new game")
+        start_new_game()
     return True
 
 
@@ -70,4 +92,4 @@ async def feed(request, websocket):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(host="0.0.0.0", port=8000, debug=False)

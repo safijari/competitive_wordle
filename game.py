@@ -11,7 +11,8 @@ def score_guess(guess, word):
             out.append("X")
 
     return "".join(out)
-    
+
+
 class GameState:
     def __init__(self, word, username):
         self.username = username
@@ -41,7 +42,6 @@ class GameState:
 
         out = score_guess(word, self.word)
 
-
         self.check_if_won()
 
         return out
@@ -49,9 +49,12 @@ class GameState:
     def check_if_won(self):
         return len(self.tries) and self.tries[-1] == self.word
 
+    def check_if_over(self):
+        return self.check_if_won() or len(self.tries) >= 6
+
     @property
     def score(self):
-        return 6 - len(self.tries)
+        return 7 - len(self.tries) if self.check_if_won() else 0
 
 
 class WordlePlayerState:
@@ -77,7 +80,9 @@ class WordlePlayerState:
             "username": self.username,
             "num_games": len(self.games) - 1,
             "score": self.score,
-            "current_game_state": [[tr, score_guess(tr, game.word)] for tr in game.tries]
+            "current_game_state": [
+                [tr, score_guess(tr, game.word)] for tr in game.tries
+            ],
         }
 
     def summary(self):
@@ -86,7 +91,9 @@ class WordlePlayerState:
             "username": self.username,
             "num_games": len(self.games) - 1,
             "score": self.score,
-            "current_game_state": [["", score_guess(tr, game.word)] for tr in game.tries]
+            "current_game_state": [
+                ["", score_guess(tr, game.word)] for tr in game.tries
+            ],
         }
 
 
@@ -112,8 +119,8 @@ class CompetitiveWordle:
             res[player_name] = self.players[player_name].make_guess(guess)
 
             print(f"{player_name} played {guess} and got response {res[player_name]}")
-
             print(f"{player_name} has score {self.players[player_name].score}")
+
 
 def main():
     game = CompetitiveWordle()

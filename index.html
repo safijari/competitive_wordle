@@ -1,14 +1,30 @@
 <!DOCTYPE html>
 <html>
+    <meta charset="ISO-8859-1">
   <head>
     <title>WebSocket demo</title>
   </head>
+  <style>
+    @font-face {
+	font-family: "Noto Emoji Regular";
+	src: url('NotoEmoji-Regular.ttf')  format('truetype');
+    }
+  </style>
   <body>
+    <h2> Wordle Kombat </h2>
     <span id="usernamespan">Username: <input type="text" id="username"> </span>
-    <button type="button" id="usernamebutton" onclick="sendUsername()">Click Me!</button>
+    <button type="button" id="usernamebutton" onclick="sendUsername()">Submit</button>
     <p id="yourusername"></p>
 
-    <span id="gamespan">Guess: <input type="text" id="gameinput"> </span>
+    <span>Feedback: </span><span id="feedback"></span>
+
+    <p/>
+
+    <span id="gamespan">Guess: <input type="text" id="gameinput" onkeyup="
+  var start = this.selectionStart;
+  var end = this.selectionEnd;
+  this.value = this.value.toUpperCase();
+  this.setSelectionRange(start, end);"> </span>
     <button type="button" id="guessbutton" onclick="sendGuess()">Submit</button>
     <p/>
 
@@ -17,8 +33,13 @@
     <script>
       var initialized = false;
       var username = "";
+      var dictionary = null;
       function _get(id) {
 	  return document.getElementById(id);
+      }
+
+      function _feedback(msg) {
+	  _get("feedback").innerHTML = msg;
       }
 
       var ws = new WebSocket('ws://' + document.domain + ':' + location.port + '/game')
@@ -34,8 +55,22 @@
 	  return out;
       }
 
+      _get("username").addEventListener("keyup", function(event) {
+	  if (event.keyCode === 13) {
+	      event.preventDefault();
+	      _get("usernamebutton").click();
+	  }
+      });
+
+      _get("gameinput").addEventListener("keyup", function(event) {
+	  if (event.keyCode === 13) {
+	      event.preventDefault();
+	      _get("guessbutton").click();
+	  }
+      });
+
       ws.onmessage = function (event) {
-	  console.log(event.data);
+	  // console.log(event.data);
 	  if (!initialized)
 	  {
 	      _get("username").remove();
@@ -45,46 +80,70 @@
 	  }
 	  var res = JSON.parse(event.data);
 	  if (res.type == "state") {
-	      _get("yourusername").innerHTML = "You're logged in as: " + res.data.username;
-	  }
-	  username = res.data.username;
-	  var out = "\n";
-	  for (var i = 0; i < res.data.current_game_state.length; i++) {
-	      var guess = res.data.current_game_state[i][0];
-	      var glyphs = res.data.current_game_state[i][1];
-	      out += "<p>" + guess + "</p>";
-	      out += "<p>" + to_emoji(glyphs) + "</p>";
-	  }
-
-	  for (const summary of res.summaries) {
-	      if (summary.username != res.data.username) {
-		  console.log(summary);
-	      out += "<p> User: " + summary.username + "</p>";
-	      for (const tries of summary.current_game_state) {
-		var glyphs = tries[1];
+	      _get("yourusername").innerHTML = "Logged in as: " + res.data.username + ", Score: " + res.data.score + ", Games: " + res.data.num_games;
+	    username = res.data.username;
+	    var out = "\n";
+	    for (var i = 0; i < res.data.current_game_state.length; i++) {
+		var guess = res.data.current_game_state[i][0];
+		var glyphs = (res.data.current_game_state[i][1]);
+		final = "";
+		for (var j = 0; j < guess.length; j++) {
+		    final += guess[j].toUpperCase() + " ";
+		}
+		// out += "<p>" + final + "</p>";
+		out += "<p>" + final + "</p>";
 		out += "<p>" + to_emoji(glyphs) + "</p>";
-	      }
-	      }
-	  }
 
-	  _get("state").innerHTML = out;
+	    }
+	      console.log(event.data);
+
+	    for (const summary of res.summaries) {
+		if (summary.username != res.data.username) {
+		    // console.log(summary);
+		out += "<p> User: " + summary.username + ", Score: " + summary.score + ", Games: " + summary.num_games + "</p>";
+		for (const tries of summary.current_game_state) {
+		    var glyphs = tries[1];
+		    out += "<p>" + to_emoji(glyphs) + "</p>";
+		  }
+		}
+	    }
+
+	    _get("state").innerHTML = out;
+	  }
+	  if (res.type == "dictionary") {
+	      dictionary = res.data;
+	  }
 
       };
 
       function sendUsername() {
-	  var username = _get("username").value;
+	  var username = _get("username").value.toLowerCase();
 	  if (username != "") {
 	      console.log("sending username");
 	      ws.send("handshake:" + username);
+	      _get("gameinput").focus();
 	  }
       }
 
       function sendGuess() {
-	  var guess = _get("gameinput").value;
-	  // validate
-	  console.log("sending guess " + guess);
-	  ws.send("guess:"+username+":" + guess);
+	  _feedback("");
+	  var guess = _get("gameinput").value.toLowerCase();
+	  if (dictionary == null) {
+	      _feedback("Hold your horses, the game has not initialized yet.");
+	      return;
+	  }
+	  if (!dictionary.includes(guess)) {
+	      _feedback(guess + " is not a valid word");
+	  }
+	  else {
+	      _feedback("sending guess " + guess.toUpperCase());
+		ws.send("guess:"+username+":" + guess);
+	  }
+	  _get("gameinput").focus();
+	  _get("gameinput").select();
       }
+
+      _get("username").focus();
 
     </script>
 
