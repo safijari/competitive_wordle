@@ -91,7 +91,7 @@ async def sync_game(in_socket):
         except Exception:
             print(f"Can't sync to {user}, will try next time")
 
-    if all([game.players[user].games[-1].check_if_over() for user in users]):
+    if game.players and all([game.players[user].games[-1].check_if_over() for user in users]):
         print("starting new game")
         start_new_game()
     return True
