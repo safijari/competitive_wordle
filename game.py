@@ -109,7 +109,7 @@ class CompetitiveWordle:
 
     def select_word(self, word):
         self.word = word
-        print(f"Starting new game: {word}")
+        print(f"Starting new game")
         for player_name, state in self.players.items():
             state.new_game(word)
 
@@ -118,7 +118,7 @@ class CompetitiveWordle:
         for player_name, guess in indict.items():
             res[player_name] = self.players[player_name].make_guess(guess)
 
-            print(f"{player_name} played {guess} and got response {res[player_name]}")
+            print(f"{player_name} played a guess and got response {res[player_name]}")
             print(f"{player_name} has score {self.players[player_name].score}")
 
 

@@ -6,13 +6,13 @@ import asyncio
 import json
 import traceback
 from random import choice
+import time
 
 from dictionary import to_choose, allowed_words
 
 all_words = to_choose + allowed_words
 
 to_choose = [w for w in to_choose if len(set(w)) == 5]
-print(len(to_choose), "total words")
 
 
 to_choose = set(to_choose)
@@ -55,15 +55,29 @@ async def consumer(socket):
     if message and "guess" in message and len(message.split(":")) == 3:
         _, username, guess = message.split(":")
         game.play({username: guess})
+        return True
 
-    return True
+    if message and "kick_player" in message and len(message.split(":")) == 2:
+        player = message.split(":")[1]
+        try:
+            del users[player]
+            try:
+                del game.players[player]
+            except Exception:
+                print(f"Could not fully kick player {player}")
+        except Exception:
+            print(f"Could not fully kick player {player}")
+
+    return False
 
 
-async def sync_game():
+async def sync_game(in_socket):
     print("syncing")
-    await asyncio.sleep(1.0)
+    # await asyncio.sleep(1.0)
     summaries = [game.players[user].summary() for user in users]
     for user, socket in users.items():
+        if socket != in_socket:
+            continue
         try:
             await socket.send(
                 json.dumps(
@@ -85,10 +99,12 @@ async def sync_game():
 
 @app.websocket("/game")
 async def feed(request, websocket):
-    print(request, websocket)
+    last_sync = time.time()
     while True:
-        await consumer(websocket)
-        await sync_game()
+        do_sync = await consumer(websocket)
+        if time.time() - last_sync > 1.0 or do_sync:
+            last_sync = time.time()
+            await sync_game(websocket)
 
 
 if __name__ == "__main__":
