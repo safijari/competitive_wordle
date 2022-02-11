@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html>
-    <meta charset="ISO-8859-1">
+  <meta charset="ISO-8859-1">
   <head>
     <title>WebSocket demo</title>
+    <style>
+      font-face {
+	  font-family: "Noto Emoji Regular";
+	  src: url('NotoEmoji-Regular.ttf')  format('truetype');
+      }
+      kbd.key {
+	  border-radius: 3px;
+	  padding: 1px 2px 0;
+	  border: 1px solid black;
+      }
+
+    </style>
   </head>
-  <style>
-    @font-face {
-	font-family: "Noto Emoji Regular";
-	src: url('NotoEmoji-Regular.ttf')  format('truetype');
-    }
-  </style>
   <body>
     <h2> Wordle Kombat </h2>
     <span id="usernamespan">Username: <input type="text" id="username"> </span>
@@ -21,19 +27,46 @@
     <p/>
 
     <span id="gamespan">Guess: <input type="text" id="gameinput" onkeyup="
-  var start = this.selectionStart;
-  var end = this.selectionEnd;
-  this.value = this.value.toUpperCase();
-  this.setSelectionRange(start, end);"> </span>
+									  var start = this.selectionStart;
+									  var end = this.selectionEnd;
+									  this.value = this.value.toUpperCase();
+									  this.setSelectionRange(start, end);"> </span>
     <button type="button" id="guessbutton" onclick="sendGuess()">Submit</button>
     <p/>
 
     <span id="state"></span>
 
     <script>
+      var ws = new WebSocket('ws://' + document.domain + ':' + location.port + '/game')
       var initialized = false;
-      var username = "";
+      var username = localStorage.getItem("username");
       var dictionary = null;
+
+      ws.onopen = function (event) {
+	  if (username != null && username != "") {
+	      console.log("doing");
+	      _get("username").value = username;
+	      sendUsername();
+	  }
+
+	  _get("username").addEventListener("keyup", function(event) {
+	      if (event.keyCode === 13) {
+		  event.preventDefault();
+		  _get("usernamebutton").click();
+	      }
+	  });
+
+	  _get("gameinput").addEventListener("keyup", function(event) {
+	      if (event.keyCode === 13) {
+		  event.preventDefault();
+		  _get("guessbutton").click();
+	      }
+	  });
+
+	  _get("username").focus();
+	  
+      }
+
       function _get(id) {
 	  return document.getElementById(id);
       }
@@ -41,8 +74,6 @@
       function _feedback(msg) {
 	  _get("feedback").innerHTML = msg;
       }
-
-      var ws = new WebSocket('ws://' + document.domain + ':' + location.port + '/game')
 
       function to_emoji(line) {
 	  var out = "";
@@ -55,19 +86,6 @@
 	  return out;
       }
 
-      _get("username").addEventListener("keyup", function(event) {
-	  if (event.keyCode === 13) {
-	      event.preventDefault();
-	      _get("usernamebutton").click();
-	  }
-      });
-
-      _get("gameinput").addEventListener("keyup", function(event) {
-	  if (event.keyCode === 13) {
-	      event.preventDefault();
-	      _get("guessbutton").click();
-	  }
-      });
 
       ws.onmessage = function (event) {
 	  // console.log(event.data);
@@ -80,35 +98,36 @@
 	  }
 	  var res = JSON.parse(event.data);
 	  if (res.type == "state") {
+	      localStorage.setItem("username", res.data.username);
 	      _get("yourusername").innerHTML = "Logged in as: " + res.data.username + ", Score: " + res.data.score + ", Games: " + res.data.num_games;
-	    username = res.data.username;
-	    var out = "\n";
-	    for (var i = 0; i < res.data.current_game_state.length; i++) {
-		var guess = res.data.current_game_state[i][0];
-		var glyphs = (res.data.current_game_state[i][1]);
-		final = "";
-		for (var j = 0; j < guess.length; j++) {
-		    final += guess[j].toUpperCase() + " ";
-		}
-		// out += "<p>" + final + "</p>";
-		out += "<p>" + final + "</p>";
-		out += "<p>" + to_emoji(glyphs) + "</p>";
+	      username = res.data.username;
+	      var out = "\n";
+	      for (var i = 0; i < res.data.current_game_state.length; i++) {
+		  var guess = res.data.current_game_state[i][0];
+		  var glyphs = (res.data.current_game_state[i][1]);
+		  final = "";
+		  for (var j = 0; j < guess.length; j++) {
+		      final += "<kbd>" + guess[j].toUpperCase() + "</kbd>";
+		  }
+		  // out += "<p>" + final + "</p>";
+		  out += "<p>" + final + "</p>";
+		  out += "<p>" + to_emoji(glyphs) + "</p>";
 
-	    }
+	      }
 	      console.log(event.data);
 
-	    for (const summary of res.summaries) {
-		if (summary.username != res.data.username) {
-		    // console.log(summary);
-		out += "<p> User: " + summary.username + ", Score: " + summary.score + ", Games: " + summary.num_games + "</p>";
-		for (const tries of summary.current_game_state) {
-		    var glyphs = tries[1];
-		    out += "<p>" + to_emoji(glyphs) + "</p>";
+	      for (const summary of res.summaries) {
+		  if (summary.username != res.data.username) {
+		      // console.log(summary);
+		      out += "<p> User: " + summary.username + ", Score: " + summary.score + ", Games: " + summary.num_games + "</p>";
+		      for (const tries of summary.current_game_state) {
+			  var glyphs = tries[1];
+			  out += "<p>" + to_emoji(glyphs) + "</p>";
+		      }
 		  }
-		}
-	    }
+	      }
 
-	    _get("state").innerHTML = out;
+	      _get("state").innerHTML = out;
 	  }
 	  if (res.type == "dictionary") {
 	      dictionary = res.data;
@@ -137,15 +156,14 @@
 	  }
 	  else {
 	      _feedback("sending guess " + guess.toUpperCase());
-		ws.send("guess:"+username+":" + guess);
+	      ws.send("guess:"+username+":" + guess);
 	  }
 	  _get("gameinput").focus();
 	  _get("gameinput").select();
       }
 
-      _get("username").focus();
 
-    </script>
+      </script>
 
   </body>
 </html>
