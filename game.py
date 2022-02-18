@@ -1,14 +1,22 @@
 def score_guess(guess, word):
-    out = []
-    for c1, c2 in zip(guess, word):
+    count_by_char = {c: 0 for c in word}
+    for c in word:
+        count_by_char[c] += 1
+
+    # print(count_by_char)
+    out = ["X"] * len(word)
+
+    for i, (c1, c2) in enumerate(zip(guess, word)):
         if c1 == c2:
-            out.append("C")
-            continue
-        if c1 in word:
-            out.append("P")
-            continue
-        if c1 not in word:
-            out.append("X")
+            out[i] = "C"
+            count_by_char[c1] -= 1
+            # print(c1, c2, i, count_by_char)
+
+    for i, (c1, c2) in enumerate(zip(guess, word)):
+        if c1 != c2 and c1 in word and count_by_char[c1] > 0:
+            out[i] = "P"
+            count_by_char[c1] -= 1
+            # print(c1, i, count_by_char)
 
     return "".join(out)
 
@@ -122,22 +130,23 @@ class CompetitiveWordle:
 
 
 def main():
-    game = CompetitiveWordle()
-    game.add_player("jari")
-    game.add_player("cem")
-    game.select_word("perky")
+    print(score_guess("crscs", "cciss"))
+    # game = CompetitiveWordle()
+    # game.add_player("jari")
+    # game.add_player("cem")
+    # game.select_word("perky")
 
-    game.play({"jari": "porky", "cem": "wordle"})
-    game.play({"jari": "perky", "cem": "first"})
-    game.play({"jari": "jerky", "cem": "perky"})
-    game.play({"jari": "jerky", "cem": "crepe"})
+    # game.play({"jari": "porky", "cem": "wordle"})
+    # game.play({"jari": "perky", "cem": "first"})
+    # game.play({"jari": "jerky", "cem": "perky"})
+    # game.play({"jari": "jerky", "cem": "crepe"})
 
-    game.select_word("frost")
+    # game.select_word("frost")
 
-    game.play({"jari": "porky", "cem": "wordle"})
-    game.play({"jari": "perky", "cem": "first"})
-    game.play({"jari": "jerky", "cem": "frost"})
-    game.play({"jari": "jerky", "cem": "crepe"})
+    # game.play({"jari": "porky", "cem": "wordle"})
+    # game.play({"jari": "perky", "cem": "first"})
+    # game.play({"jari": "jerky", "cem": "frost"})
+    # game.play({"jari": "jerky", "cem": "crepe"})
 
 
 if __name__ == "__main__":

@@ -10,9 +10,13 @@ import time
 
 from dictionary import to_choose, allowed_words
 
+simbe_words = [w for w in open("./simbe_words.txt", "r").read().split("\n") if w.strip]
+
 all_words = to_choose + allowed_words
 
-to_choose = [w for w in to_choose if len(set(w)) == 5]
+# to_choose = [w for w in to_choose if len(set(w)) == 5]
+
+to_choose = simbe_words
 
 
 to_choose = set(to_choose)
@@ -73,7 +77,6 @@ async def consumer(socket):
 
 async def sync_game(in_socket):
     print("syncing")
-    # await asyncio.sleep(1.0)
     summaries = [game.players[user].summary() for user in users]
     for user, socket in users.items():
         if socket != in_socket:

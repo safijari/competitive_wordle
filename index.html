@@ -105,17 +105,6 @@
 	  _get("feedback").innerHTML = msg;
       }
 
-      function to_emoji(line) {
-	  var out = "";
-	  for (var i = 0; i < line.length; i++) {
-	      var ch = line[i];
-	      if (ch == "C") {out += "🟩"}
-	      if (ch == "P") {out += "🟨"}
-	      if (ch == "X") {out += "⬛"}
-	  }
-	  return out;
-      }
-
       function styleletter(letter, glyph) {
 	  var color = "#D3D3D3";
 	  if (glyph == "C") {color = "#5CC218";}
@@ -187,7 +176,7 @@
 		      out += "<p> User: <b>" + summary.username + "</b>, Score: " + summary.score + ", Games: " + summary.num_games + "</p>";
 		      for (const tries of summary.current_game_state) {
 			  var glyphs = tries[1];
-			  out += "<span>   </span><p style='font-family:monospace'>";
+			  out += "<span>   </span><p style='font-family:monospace;font-size:4pt;'>";
 			  for (const glph of glyphs) {
 			      out += styleletter(" ", glph);
 			      
