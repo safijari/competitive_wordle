@@ -4,23 +4,6 @@
   <head>
     <title>WebSocket demo</title>
     <style>
-      /* /\* font-face { *\/ */
-      /* /\* 	  font-family: "Noto Emoji Regular"; *\/ */
-      /* /\* 	  src: url('NotoEmoji-Regular.ttf')  format('truetype'); *\/ */
-      /* /\* } *\/ */
-      /* /\* kbd.key { *\/ */
-      /* /\* 	  border-radius: 3px; *\/ */
-      /* /\* 	  padding: 1px 2px 0; *\/ */
-      /* /\* 	  border: 1px solid black; *\/ */
-      /* /\* } *\/ */
-      /* p { */
-      /* 	  color: red; */
-      /* } */
-      /* span { */
-      /* 	  border-radius: 3px; */
-      /* 	  padding: 1px 2px 0; */
-      /* 	  border: 1px solid black; */
-      /* } */
       td {
 	  padding: 0px 10px;
       }
@@ -55,8 +38,8 @@
 										this.value = final_val.substring(0, 5);
 										this.setSelectionRange(start, end);
 										if (state.current_game_state.length >= 6) {
-										    this.value = '';
-											       }
+										this.value = '';
+										}
 										currguess=this.value;updateCurrGuess();"> </span>
 	  <button type="button" id="guessbutton" onclick="sendGuess()">Submit</button>
 	  <p/>
@@ -143,18 +126,18 @@
       }
 
       function get_not_present(state) {
-	for (var i = 0; i < state.current_game_state.length; i++) {
-	    var guess = state.current_game_state[i][0];
-	    var glyphs = state.current_game_state[i][1];
-	    var notpresent = [];
-	    for (var j = 0; j < guess.length; j++) {
-		final += styleletter(guess[j], glyphs[j]);
-		if (glyphs[j] == "X") {
-		    notpresent.push(guess[j]);
-		}
-	    }
-	}
-	    return notpresent;
+	  for (var i = 0; i < state.current_game_state.length; i++) {
+	      var guess = state.current_game_state[i][0];
+	      var glyphs = state.current_game_state[i][1];
+	      var notpresent = [];
+	      for (var j = 0; j < guess.length; j++) {
+		  final += styleletter(guess[j], glyphs[j]);
+		  if (glyphs[j] == "X") {
+		      notpresent.push(guess[j]);
+		  }
+	      }
+	  }
+	  return notpresent;
       }
 
       ws.onmessage = function (event) {
@@ -204,7 +187,12 @@
 		      out += "<p> User: <b>" + summary.username + "</b>, Score: " + summary.score + ", Games: " + summary.num_games + "</p>";
 		      for (const tries of summary.current_game_state) {
 			  var glyphs = tries[1];
-			  out += "<span>   </span><p style='padding:0px;margin-bottom:-7px;margin-top:-7px;margin-left:10px;'>" + to_emoji(glyphs) + "</p>";
+			  out += "<span>   </span><p style='font-family:monospace'>";
+			  for (const glph of glyphs) {
+			      out += styleletter(" ", glph);
+			      
+			  }
+			  out += "</p>";
 		      }
 		  }
 	      }
