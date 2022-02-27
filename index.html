@@ -60,10 +60,10 @@
 	  <b style="margin-top:0;"> Words so far </b>
 	  <span id="wordssofar"></span>
 	</td>
-	<td>
-	  <b style="margin-top:0;"> Word List </b>
-	  <span id="allwords"></span>
-	</td>
+	<!-- <td> -->
+	<!--   <b style="margin-top:0;"> Word List </b> -->
+	<!--   <span id="allwords"></span> -->
+	<!-- </td> -->
       </tr>
     </table>
 
@@ -228,13 +228,13 @@
 
 	      _get("wordssofar").innerHTML = wsf;
 
-	      wsf = "<ul>";
-	      for (const previous_word of res.word_list) {
-		  wsf += "<li style='font-family:monospace;'>" + previous_word.toUpperCase() + "</li>";
-	      }
-	      wsf += "</ul>";
+	      // wsf = "<ul>";
+	      // for (const previous_word of res.word_list) {
+	      // 	  wsf += "<li style='font-family:monospace;'>" + previous_word.toUpperCase() + "</li>";
+	      // }
+	      // wsf += "</ul>";
 
-	      _get("allwords").innerHTML = wsf;
+	      // _get("allwords").innerHTML = wsf;
 
 
 	  }
