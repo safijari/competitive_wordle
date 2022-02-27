@@ -16,7 +16,6 @@ def score_guess(guess, word):
         if c1 != c2 and c1 in word and count_by_char[c1] > 0:
             out[i] = "P"
             count_by_char[c1] -= 1
-            # print(c1, i, count_by_char)
 
     return "".join(out)
 

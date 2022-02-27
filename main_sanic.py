@@ -12,11 +12,12 @@ from dictionary import to_choose, allowed_words
 
 simbe_words = [w for w in open("./simbe_words.txt", "r").read().split("\n") if w.strip]
 
-all_words = to_choose + allowed_words
+all_words = to_choose + allowed_words + simbe_words
 
 # to_choose = [w for w in to_choose if len(set(w)) == 5]
 
 to_choose = simbe_words
+to_choose_list = list(simbe_words)
 
 
 to_choose = set(to_choose)
@@ -88,12 +89,14 @@ async def sync_game(in_socket):
                         "type": "state",
                         "data": game.players[user].as_dict(),
                         "summaries": summaries,
-                        "previous_words": chosen[:-1]
+                        "previous_words": chosen[:-1],
+                        "word_list": to_choose_list,
                     }
                 )
             )
         except Exception:
             print(f"Can't sync to {user}, will try next time")
+            traceback.print_exc()
 
     if game.players and all([game.players[user].games[-1].check_if_over() for user in users]):
         print("starting new game")
