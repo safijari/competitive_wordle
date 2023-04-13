@@ -14,6 +14,20 @@
 	  vertical-align: baseline;
       }
 
+      /* Set up styles for the circle */
+      .circle {
+              width: 50px;
+              height: 50px;
+              border-radius: 50%;
+              background-color: "white";
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              font-size: 24px;
+              color: "green";
+      }
+
+
     </style>
   </head>
   <body>
@@ -22,7 +36,7 @@
 	  <h2 style="margin:0;"> Wordle Kombat </h2>
 	  <span id="usernamespan">Username: <input type="text" id="username"> </span>
 	  <button type="button" id="usernamebutton" onclick="sendUsername()">Submit</button>
-	  <p id="yourusername"></p>
+	  <p id="yourusername"></p><div class="circle" id="timer" style="background:conic-gradient(green 100%, white 0)"></div>
 
 	  <span>Feedback: </span><span id="feedback"></span>
 
@@ -148,7 +162,17 @@
 	  if (res.type == "state") {
 	      state = res.data;
 	      localStorage.setItem("username", res.data.username);
-	      _get("yourusername").innerHTML = "Logged in as: " + res.data.username + ", Score: " + res.data.score + ", Games: " + res.data.num_games;
+              _get("yourusername").innerHTML = "Logged in as: " + res.data.username + ", Score: " + res.data.score + ", Games: " + res.data.num_games;
+            let perc = res.data.time_left/300*100;
+            let color = "green";
+            if (perc < 50) {
+              color = "yellow";
+            }
+            if (perc < 10) {
+              color = "red";
+            }
+
+              _get("timer").style.background = "conic-gradient(" + color + " " + perc + "%, #f0f0f0 0)";
 	      username = res.data.username;
 	      var out = "\n";
 	      for (var i = 0; i < res.data.current_game_state.length; i++) {

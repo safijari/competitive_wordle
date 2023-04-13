@@ -1,3 +1,5 @@
+import time
+
 def score_guess(guess, word):
     count_by_char = {c: 0 for c in word}
     for c in word:
@@ -21,13 +23,19 @@ def score_guess(guess, word):
 
 
 class GameState:
-    def __init__(self, word, username):
+    def __init__(self, word, username, round_time):
         self.username = username
         self.word = word
         self.state = "ongoing"
         self.tries = []
+        self.round_time = round_time
+        self.start_time = time.time()
 
     def make_guess(self, word):
+        if self.time_left <= 0:
+            print(f"ERROR: {self.username} tried a word but they have no time left")
+            return None
+            
         if len(word) != 5:
             print(f"ERROR: {self.username} tried a word of incompatible length")
             return None
@@ -56,11 +64,15 @@ class GameState:
         return len(self.tries) and self.tries[-1] == self.word
 
     def check_if_over(self):
-        return self.check_if_won() or len(self.tries) >= 6
+        return self.check_if_won() or len(self.tries) >= 6 or self.time_left <= 0
 
     @property
     def score(self):
         return 7 - len(self.tries) if self.check_if_won() else 0
+
+    @property
+    def time_left(self):
+        return self.round_time - (time.time() - self.start_time)
 
 
 class WordlePlayerState:
@@ -68,8 +80,8 @@ class WordlePlayerState:
         self.username = username
         self.games = []
 
-    def new_game(self, word):
-        self.games.append(GameState(word, self.username))
+    def new_game(self, word, round_time):
+        self.games.append(GameState(word, self.username, round_time))
 
     def make_guess(self, guess):
         assert self.games, "No games exists, can't make guess"
@@ -89,6 +101,7 @@ class WordlePlayerState:
             "current_game_state": [
                 [tr, score_guess(tr, game.word)] for tr in game.tries
             ],
+            "time_left": game.time_left
         }
 
     def summary(self):
@@ -104,20 +117,21 @@ class WordlePlayerState:
 
 
 class CompetitiveWordle:
-    def __init__(self):
+    def __init__(self, round_time=60*5):
         self.players = {}
         self.word = ""
+        self.round_time = round_time
 
     def add_player(self, username):
         if username not in self.players:
             self.players[username] = WordlePlayerState(username)
-            self.players[username].new_game(self.word)
+            self.players[username].new_game(self.word, self.round_time)
 
     def select_word(self, word):
         self.word = word
         print(f"Starting new game")
         for player_name, state in self.players.items():
-            state.new_game(word)
+            state.new_game(word, self.round_time)
 
     def play(self, indict):
         res = {}
