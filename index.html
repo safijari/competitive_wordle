@@ -82,7 +82,7 @@
     </table>
 
     <script>
-      var ws = new WebSocket('ws://' + document.domain + ':' + location.port + '/game')
+      var ws = new WebSocket('wss://' + document.domain + ':' + location.port + '/game')
       var initialized = false;
       var username = localStorage.getItem("username");
       var dictionary = null;
