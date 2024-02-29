@@ -10,12 +10,9 @@ import time
 
 from dictionary import to_choose, allowed_words
 
-simbe_words = [w for w in open("./simbe_words.txt", "r").read().split("\n") if w.strip]
-simbe_words = []
+all_words = to_choose + allowed_words
 
-all_words = to_choose + allowed_words + simbe_words
-
-# to_choose = [w for w in to_choose if len(set(w)) == 5]
+to_choose = [w for w in to_choose if len(set(w)) == 5]
 
 # to_choose = simbe_words
 to_choose_list = list(to_choose)
